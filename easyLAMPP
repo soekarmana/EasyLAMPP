@@ -1,0 +1,58 @@
+#!/bin/bash
+set -e
+
+sudotool=gksu
+tmpScript=/tmp/easylampp.$RANDOM
+CpanelLauncher="$HOME/.local/share/applications/XAMPP Control Panel.desktop"
+HtdocsFolder="$HOME/.local/share/applications/XAMPP htdocs folder.desktop"
+XAMPPtarball=`zenity --file-selection --file-filter=*.tar.gz --title="Select XAMPP for Linux tarball"`
+
+#create new temporary script
+#so we can ask user for password just once
+touch $tmpScript
+(cat <<'EOF'
+#!/bin/bash
+set -e
+
+if [ -d /opt/lampp ]; then
+	mv /opt/lampp /opt/lampp.bak.$RANDOM
+	mkdir /opt/lampp && $sudotool file-roller $1 -e /opt
+	chown -R $2 /opt/lampp/htdocs
+else
+	file-roller $1 -e /opt
+	chown -R $2 /opt/lampp/htdocs
+fi
+EOF
+) > $tmpScript
+chmod +x $tmpScript
+
+#ask user for password
+#pass variable form parent script to temporay script with arguments
+$sudotool --description="Installing XAMPP" $tmpScript "$XAMPPtarball" $USER
+
+#create Htdocs & Control panel launcher
+touch "$CpanelLauncher"
+(cat <<'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=gksu /opt/lampp/share/xampp-control-panel/xampp-control-panel
+Name=XAMPP Control Panel
+Icon=gnome-control-center
+EOF
+) > "$CpanelLauncher"
+chmod +x "$CpanelLauncher"
+
+touch "$HtdocsFolder"
+(cat <<'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=nautilus /opt/lampp/htdocs
+Name=XAMPP htdocs
+Icon=folder-remote
+EOF
+) > "$HtdocsFolder"
+chmod +x "$HtdocsFolder"
