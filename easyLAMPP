@@ -56,3 +56,10 @@ Icon=folder-remote
 EOF
 ) > "$HtdocsFolder"
 chmod +x "$HtdocsFolder"
+
+if zenity --question --text="Do you want to launch XAMPP now ?" --title="Installation Finished" == 0 
+then
+	$sudotool /opt/lampp/share/xampp-control-panel/xampp-control-panel
+fi
+
+exit 0
